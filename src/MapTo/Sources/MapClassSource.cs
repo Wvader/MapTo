@@ -33,6 +33,7 @@ namespace MapTo.Sources
                     .GeneratePrivateConstructor(model)
                     .WriteLine()
                     .GenerateFactoryMethod(model)
+                    .GenerateUpdateMethod(model)
 
                     // End class declaration
                     .WriteClosingBracket()
@@ -80,19 +81,29 @@ namespace MapTo.Sources
                 .WriteLine($"if ({sourceClassParameterName} == null) throw new ArgumentNullException(nameof({sourceClassParameterName}));")
                 .WriteLine()
                 .WriteLine($"{mappingContextParameterName}.{MappingContextSource.RegisterMethodName}({sourceClassParameterName}, this);")
-                .WriteLine();
+                .WriteLine().
 
+            WriteProperties( model, sourceClassParameterName, mappingContextParameterName);
+
+            // End constructor declaration
+            return builder.WriteClosingBracket();
+        }
+
+        private static SourceBuilder WriteProperties(this SourceBuilder builder, MappingModel model,
+            string? sourceClassParameterName, string mappingContextParameterName)
+        {
             foreach (var property in model.MappedProperties)
             {
                 if (property.TypeConverter is null)
                 {
                     if (property.IsEnumerable)
                     {
-                        builder.WriteLine($"{property.Name} = {sourceClassParameterName}.{property.SourcePropertyName}.Select({mappingContextParameterName}.{MappingContextSource.MapMethodName}<{property.MappedSourcePropertyTypeName}, {property.EnumerableTypeArgument}>).ToList();");
+                        builder.WriteLine(
+                            $"{property.Name} = {sourceClassParameterName}.{property.SourcePropertyName}.Select({mappingContextParameterName}.{MappingContextSource.MapMethodName}<{property.MappedSourcePropertyTypeName}, {property.EnumerableTypeArgument}>).ToList();");
                     }
                     else
                     {
-                        builder.WriteLine(property.MappedSourcePropertyTypeName is null 
+                        builder.WriteLine(property.MappedSourcePropertyTypeName is null
                             ? $"{property.Name} = {sourceClassParameterName}.{property.SourcePropertyName};"
                             : $"{property.Name} = {mappingContextParameterName}.{MappingContextSource.MapMethodName}<{property.MappedSourcePropertyTypeName}, {property.Type}>({sourceClassParameterName}.{property.SourcePropertyName});");
                     }
@@ -103,14 +114,15 @@ namespace MapTo.Sources
                         ? "null"
                         : $"new object[] {{ {string.Join(", ", property.TypeConverterParameters)} }}";
 
-                    builder.WriteLine($"{property.Name} = new {property.TypeConverter}().Convert({sourceClassParameterName}.{property.SourcePropertyName}, {parameters});");
+                    builder.WriteLine(
+                        $"{property.Name} = new {property.TypeConverter}().Convert({sourceClassParameterName}.{property.SourcePropertyName}, {parameters});");
                 }
-            }
 
-            // End constructor declaration
-            return builder.WriteClosingBracket();
+            }
+            return builder;
+
         }
-        
+
         private static SourceBuilder GenerateFactoryMethod(this SourceBuilder builder, MappingModel model)
         {
             var sourceClassParameterName = model.SourceTypeIdentifierName.ToCamelCase();
@@ -122,6 +134,20 @@ namespace MapTo.Sources
                 .WriteOpeningBracket()
                 .WriteLine($"return {sourceClassParameterName} == null ? null : {MappingContextSource.ClassName}.{MappingContextSource.FactoryMethodName}<{model.SourceType}, {model.TypeIdentifierName}>({sourceClassParameterName});")
                 .WriteClosingBracket();
+        }
+        
+        private static SourceBuilder GenerateUpdateMethod(this SourceBuilder builder, MappingModel model)
+        {
+            var sourceClassParameterName = model.SourceTypeIdentifierName.ToCamelCase();
+
+             builder
+                .GenerateUpdaterMethodsXmlDocs(model, sourceClassParameterName)
+                .WriteLine($"public void {model.Options.NullableReferenceSyntax}Update({model.SourceType}{model.Options.NullableReferenceSyntax} {sourceClassParameterName})")
+                .WriteOpeningBracket()
+                .WriteProperties( model, sourceClassParameterName,"context" )
+                .WriteClosingBracket();
+
+             return builder;
         }
         
         private static SourceBuilder GenerateConvertorMethodsXmlDocs(this SourceBuilder builder, MappingModel model, string sourceClassParameterName)
@@ -138,6 +164,21 @@ namespace MapTo.Sources
                 .WriteLine("/// </summary>")
                 .WriteLine($"/// <param name=\"{sourceClassParameterName}\">The instance of <see cref=\"{model.SourceType}\"/> to use as source.</param>")
                 .WriteLine($"/// <returns>A new instance of <see cred=\"{model.TypeIdentifierName}\"/> -or- <c>null</c> if <paramref name=\"{sourceClassParameterName}\"/> is <c>null</c>.</returns>");
+        }
+        
+        private static SourceBuilder GenerateUpdaterMethodsXmlDocs(this SourceBuilder builder, MappingModel model, string sourceClassParameterName)
+        {
+            if (!model.Options.GenerateXmlDocument)
+            {
+                return builder;
+            }
+
+            return builder
+                .WriteLine("/// <summary>")
+                .WriteLine($"/// Updates <see cref=\"{model.TypeIdentifierName}\"/> and sets its participating properties")
+                .WriteLine($"/// using the property values from <paramref name=\"{sourceClassParameterName}\"/>.")
+                .WriteLine("/// </summary>")
+                .WriteLine($"/// <param name=\"{sourceClassParameterName}\">The instance of <see cref=\"{model.SourceType}\"/> to use as source.</param>");
         }
 
         private static SourceBuilder GenerateSourceTypeExtensionClass(this SourceBuilder builder, MappingModel model)

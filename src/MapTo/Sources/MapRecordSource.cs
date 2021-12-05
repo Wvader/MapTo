@@ -32,6 +32,7 @@ namespace MapTo.Sources
 
             builder
                 .GeneratePrivateConstructor(model)
+                
                 .WriteLine()
                 .GenerateFactoryMethod(model)
 
@@ -41,6 +42,7 @@ namespace MapTo.Sources
 
                 // Extension class declaration
                 .GenerateSourceTypeExtensionClass(model)
+                
 
                 // End namespace declaration
                 .WriteClosingBracket();
@@ -75,8 +77,25 @@ namespace MapTo.Sources
             builder
                 .WriteLine($"private protected {model.TypeIdentifierName}({MappingContextSource.ClassName} {mappingContextParameterName}, {model.SourceType} {sourceClassParameterName})")
                 .Indent()
-                .Write(": this(");
+                .Write(": this(").
 
+            WriteProperties(model, sourceClassParameterName, mappingContextParameterName)
+
+            .WriteLine(")")
+                .Unindent()
+                .WriteOpeningBracket()
+                .WriteLine($"if ({mappingContextParameterName} == null) throw new ArgumentNullException(nameof({mappingContextParameterName}));")
+                .WriteLine($"if ({sourceClassParameterName} == null) throw new ArgumentNullException(nameof({sourceClassParameterName}));")
+                .WriteLine()
+                .WriteLine($"{mappingContextParameterName}.{MappingContextSource.RegisterMethodName}({sourceClassParameterName}, this);");
+
+            // End constructor declaration
+            return builder.WriteClosingBracket();
+        }
+
+        private static SourceBuilder WriteProperties(this SourceBuilder builder, MappingModel model, string sourceClassParameterName,
+            string mappingContextParameterName)
+        {
             for (var i = 0; i < model.MappedProperties.Length; i++)
             {
                 var property = model.MappedProperties[i];
@@ -100,7 +119,8 @@ namespace MapTo.Sources
                         ? "null"
                         : $"new object[] {{ {string.Join(", ", property.TypeConverterParameters)} }}";
 
-                    builder.Write($"{property.Name}: new {property.TypeConverter}().Convert({sourceClassParameterName}.{property.SourcePropertyName}, {parameters})");
+                    builder.Write(
+                        $"{property.Name}: new {property.TypeConverter}().Convert({sourceClassParameterName}.{property.SourcePropertyName}, {parameters})");
                 }
 
                 if (i < model.MappedProperties.Length - 1)
@@ -109,16 +129,7 @@ namespace MapTo.Sources
                 }
             }
 
-            builder.WriteLine(")")
-                .Unindent()
-                .WriteOpeningBracket()
-                .WriteLine($"if ({mappingContextParameterName} == null) throw new ArgumentNullException(nameof({mappingContextParameterName}));")
-                .WriteLine($"if ({sourceClassParameterName} == null) throw new ArgumentNullException(nameof({sourceClassParameterName}));")
-                .WriteLine()
-                .WriteLine($"{mappingContextParameterName}.{MappingContextSource.RegisterMethodName}({sourceClassParameterName}, this);");
-
-            // End constructor declaration
-            return builder.WriteClosingBracket();
+            return builder;
         }
 
         private static SourceBuilder GenerateFactoryMethod(this SourceBuilder builder, MappingModel model)
