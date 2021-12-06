@@ -61,6 +61,7 @@ namespace MapTo
             MappingContext context = typeSyntax switch
             {
                 ClassDeclarationSyntax => new ClassMappingContext(compilation, sourceGenerationOptions, typeSyntax),
+                StructDeclarationSyntax => new StructMappingContext(compilation, sourceGenerationOptions, typeSyntax),
                 RecordDeclarationSyntax => new RecordMappingContext(compilation, sourceGenerationOptions, typeSyntax),
                 _ => throw new ArgumentOutOfRangeException()
             };
