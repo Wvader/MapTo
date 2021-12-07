@@ -22,12 +22,12 @@ namespace MapTo.Sources
                 .WriteOpeningBracket();
 
                 // Class body
-                if (model.GenerateSecondaryConstructor)
+                /*if (model.GenerateSecondaryConstructor)
                 {
                     builder
                         .GenerateSecondaryConstructor(model)
                         .WriteLine();
-                }
+                }*/
 
                 builder
                     .GeneratePrivateConstructor(model)
@@ -72,15 +72,15 @@ namespace MapTo.Sources
             var sourceClassParameterName = model.SourceTypeIdentifierName.ToCamelCase();
             const string mappingContextParameterName = "context";
 
-            var baseConstructor = model.HasMappedBaseClass ? $" : base({mappingContextParameterName}, {sourceClassParameterName})" : string.Empty;
+            var baseConstructor = /*model.HasMappedBaseClass ? $" : base({mappingContextParameterName}, {sourceClassParameterName})" :*/ string.Empty;
 
             builder
                 .WriteLine($"public  {model.TypeIdentifierName}({MappingContextSource.ClassName} {mappingContextParameterName}, {model.SourceType} {sourceClassParameterName}){baseConstructor}")
                 .WriteOpeningBracket()
-                .WriteLine($"if ({mappingContextParameterName} == null) throw new ArgumentNullException(nameof({mappingContextParameterName}));")
-                .WriteLine($"if ({sourceClassParameterName} == null) throw new ArgumentNullException(nameof({sourceClassParameterName}));")
-                .WriteLine()
-                .WriteLine($"{mappingContextParameterName}.{MappingContextSource.RegisterMethodName}({sourceClassParameterName}, this);")
+                //.WriteLine($"if ({mappingContextParameterName} == null) throw new ArgumentNullException(nameof({mappingContextParameterName}));")
+                //.WriteLine($"if ({sourceClassParameterName} == null) throw new ArgumentNullException(nameof({sourceClassParameterName}));")
+                //.WriteLine()
+                //.WriteLine($"{mappingContextParameterName}.{MappingContextSource.RegisterMethodName}({sourceClassParameterName}, this);")
                 .WriteLine().
 
             WriteProperties( model, sourceClassParameterName, mappingContextParameterName);
