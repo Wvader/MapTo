@@ -11,7 +11,7 @@ namespace MapTo
         internal StructMappingContext(Compilation compilation, SourceGenerationOptions sourceGenerationOptions, TypeDeclarationSyntax typeSyntax)
             : base(compilation, sourceGenerationOptions, typeSyntax) { }
 
-        protected override ImmutableArray<MappedProperty> GetMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool hasInheritedClass)
+        protected override ImmutableArray<MappedProperty> GetSourceMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool hasInheritedClass)
         {
             var sourceProperties = sourceTypeSymbol.GetAllMembers().OfType<IPropertySymbol>().ToArray();
 
@@ -23,5 +23,18 @@ namespace MapTo
                 .Where(mappedProperty => mappedProperty is not null)
                 .ToImmutableArray()!;
         }
+        protected override ImmutableArray<MappedProperty> GetTypeMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool hasInheritedClass)
+        {
+            var sourceProperties = sourceTypeSymbol.GetAllMembers().OfType<IPropertySymbol>().ToArray();
+
+            return sourceTypeSymbol
+                .GetAllMembers()
+                .OfType<IPropertySymbol>()
+                .Where(p => !p.HasAttribute(IgnorePropertyAttributeTypeSymbol))
+                .Select(property => MapPropertySimple(typeSymbol, property))
+                .Where(mappedProperty => mappedProperty is not null)
+                .ToImmutableArray()!;
+        }
+
     }
 }

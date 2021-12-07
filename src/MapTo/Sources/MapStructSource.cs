@@ -1,5 +1,6 @@
 ﻿using MapTo.Extensions;
 using static MapTo.Sources.Constants;
+using System.Collections.Generic;
 
 namespace MapTo.Sources
 {
@@ -19,12 +20,18 @@ namespace MapTo.Sources
 
                 // Class declaration
                 .WriteLine($"partial struct {model.TypeIdentifierName}")
-                .WriteOpeningBracket();
+                .WriteOpeningBracket()
+                .WriteLine()
 
-                // Class body
-            
-                builder
-                    .GeneratePrivateConstructor(model)
+            // Class body
+                .GeneratePublicConstructor(model);
+
+            if (!AllPropertiesAreReadOnly(model))
+            {
+                builder.GenerateUpdateMethod(model);
+            }
+
+            builder
                     .WriteLine()
                     // End class declaration
                     .WriteClosingBracket()
@@ -32,9 +39,19 @@ namespace MapTo.Sources
 
                     // End namespace declaration
                     .WriteClosingBracket();
-            
+
             return new(builder.ToString(), $"{model.Namespace}.{model.TypeIdentifierName}.g.cs");
         }
+        private static bool AllPropertiesAreReadOnly(MappingModel model)
+        {
+            foreach (var property in model.SourceProperties)
+            {
+                if (!property.isReadOnly) return false;
+            }
+            return true;
+
+        }
+
 
         private static SourceBuilder GenerateSecondaryConstructor(this SourceBuilder builder, MappingModel model)
         {
@@ -54,32 +71,48 @@ namespace MapTo.Sources
                 .WriteLine($"{model.Options.ConstructorAccessModifier.ToLowercaseString()} {model.TypeIdentifierName}({model.SourceType} {sourceClassParameterName})")
                 .WriteLine($"    : this(new {MappingContextSource.ClassName}(), {sourceClassParameterName}) {{ }}");
         }
-        
-        private static SourceBuilder GeneratePrivateConstructor(this SourceBuilder builder, MappingModel model)
+
+
+        private static SourceBuilder GeneratePublicConstructor(this SourceBuilder builder, MappingModel model)
         {
             var sourceClassParameterName = model.SourceTypeIdentifierName.ToCamelCase();
             const string mappingContextParameterName = "context";
 
-            var baseConstructor = model.HasMappedBaseClass ? $" : base({mappingContextParameterName}, {sourceClassParameterName})" : string.Empty;
+            var baseConstructor = /*model.HasMappedBaseClass ? $" : base({mappingContextParameterName}, {sourceClassParameterName})" :*/ string.Empty;
+
+            var readOnlyProperties = model.TypeProperties.GetReadOnlyMappedProperties();
+
+            var readOnlyFields = "";
+
+            for (int i = 0; i < readOnlyProperties.Length; i++)
+            {
+                var property = readOnlyProperties[i];
+                readOnlyFields += $"{property.Type} {property.SourcePropertyName.ToCamelCase()}";
+                if (i != readOnlyProperties.Length - 1) readOnlyFields += " ,";
+            }
+
 
             builder
-                .WriteLine($"public {model.TypeIdentifierName}({MappingContextSource.ClassName} {mappingContextParameterName}, {model.SourceType} {sourceClassParameterName}){baseConstructor}")
+                .WriteLine($"public {model.TypeIdentifierName}({model.SourceType} {sourceClassParameterName}{(string.IsNullOrEmpty(readOnlyFields) ? "" : $", {readOnlyFields}")}){baseConstructor}")
                 .WriteOpeningBracket()
-                .WriteLine()
-                .WriteLine($"{mappingContextParameterName}.{MappingContextSource.RegisterMethodName}({sourceClassParameterName}, this);")
-                .WriteLine().
-
-            WriteProperties( model, sourceClassParameterName, mappingContextParameterName);
+                .TryWriteProperties(model.SourceProperties, readOnlyProperties, sourceClassParameterName, mappingContextParameterName, false);
 
             // End constructor declaration
             return builder.WriteClosingBracket();
         }
 
-        private static SourceBuilder WriteProperties(this SourceBuilder builder, MappingModel model,
-            string? sourceClassParameterName, string mappingContextParameterName)
+        private static SourceBuilder TryWriteProperties(this SourceBuilder builder, System.Collections.Immutable.ImmutableArray<MappedProperty> properties, System.Collections.Immutable.ImmutableArray<MappedProperty>? otherProperties,
+            string? sourceClassParameterName, string mappingContextParameterName, bool fromUpdate)
         {
-            foreach (var property in model.MappedProperties)
+            if (fromUpdate)
             {
+                properties = properties.GetWritableMappedProperties();
+            }
+
+            foreach (var property in properties)
+            {
+                if (property.isReadOnly && fromUpdate) continue;
+
                 if (property.TypeConverter is null)
                 {
                     if (property.IsEnumerable)
@@ -91,7 +124,7 @@ namespace MapTo.Sources
                     {
                         builder.WriteLine(property.MappedSourcePropertyTypeName is null
                             ? $"{property.Name} = {sourceClassParameterName}.{property.SourcePropertyName};"
-                            : $"{property.Name} = {mappingContextParameterName}.{MappingContextSource.MapMethodName}<{property.MappedSourcePropertyTypeName}, {property.Type}>({sourceClassParameterName}.{property.SourcePropertyName});");
+                            : "");
                     }
                 }
                 else
@@ -105,12 +138,39 @@ namespace MapTo.Sources
                 }
 
             }
+
+
+            if (otherProperties == null) return builder;
+
+            foreach (var property in otherProperties)
+            {
+    
+                builder.WriteLine(property.MappedSourcePropertyTypeName is null
+                ? $"{property.Name} = {property.SourcePropertyName.ToCamelCase()};"
+                : "");
+
+            }
+
             return builder;
 
         }
 
-     
-        
+
+
+        private static SourceBuilder GenerateUpdateMethod(this SourceBuilder builder, MappingModel model)
+        {
+            var sourceClassParameterName = model.SourceTypeIdentifierName.ToCamelCase();
+
+            builder
+               .GenerateUpdaterMethodsXmlDocs(model, sourceClassParameterName)
+               .WriteLine($"public void Update({model.SourceType} {sourceClassParameterName})")
+               .WriteOpeningBracket()
+               .TryWriteProperties(model.SourceProperties, null, sourceClassParameterName, "context", true)
+               .WriteClosingBracket();
+
+            return builder;
+        }
+
         private static SourceBuilder GenerateUpdaterMethodsXmlDocs(this SourceBuilder builder, MappingModel model, string sourceClassParameterName)
         {
             if (!model.Options.GenerateXmlDocument)

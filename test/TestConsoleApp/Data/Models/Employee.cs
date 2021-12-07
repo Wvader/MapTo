@@ -10,6 +10,5 @@ namespace TestConsoleApp.Data.Models
 
         public string EmployeeCode { get; set; }
 
-        public Manager Manager { get; set; }
     }
 }

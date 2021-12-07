@@ -44,7 +44,8 @@ namespace MapTo
         string SourceNamespace,
         string SourceTypeIdentifierName,
         string SourceTypeFullName,
-        ImmutableArray<MappedProperty> MappedProperties,
+        ImmutableArray<MappedProperty> SourceProperties,
+        ImmutableArray<MappedProperty> TypeProperties,
         bool HasMappedBaseClass,
         ImmutableArray<string> Usings,
         bool GenerateSecondaryConstructor
