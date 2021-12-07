@@ -33,7 +33,7 @@ namespace MapTo.Sources
                 .GeneratePrivateConstructor(model)
                 .WriteLine();
 
-            if(PropertiesAreReadOnly(model))
+            if(!PropertiesAreReadOnly(model))
             {
                 builder.GenerateUpdateMethod(model);
             }
