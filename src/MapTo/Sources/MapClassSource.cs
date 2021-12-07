@@ -32,7 +32,7 @@ namespace MapTo.Sources
                 builder
                     .GeneratePrivateConstructor(model)
                     .WriteLine()
-                    .GenerateFactoryMethod(model)
+                    //.GenerateFactoryMethod(model)
                     .GenerateUpdateMethod(model)
 
                     // End class declaration
@@ -40,7 +40,7 @@ namespace MapTo.Sources
                     .WriteLine()
 
                     // Extension class declaration
-                    .GenerateSourceTypeExtensionClass(model)
+                    //.GenerateSourceTypeExtensionClass(model)
 
                     // End namespace declaration
                     .WriteClosingBracket();
@@ -75,7 +75,7 @@ namespace MapTo.Sources
             var baseConstructor = /*model.HasMappedBaseClass ? $" : base({mappingContextParameterName}, {sourceClassParameterName})" :*/ string.Empty;
 
             builder
-                .WriteLine($"public  {model.TypeIdentifierName}({MappingContextSource.ClassName} {mappingContextParameterName}, {model.SourceType} {sourceClassParameterName}){baseConstructor}")
+                .WriteLine($"public  {model.TypeIdentifierName}({model.SourceType} {sourceClassParameterName}){baseConstructor}")
                 .WriteOpeningBracket()
                 //.WriteLine($"if ({mappingContextParameterName} == null) throw new ArgumentNullException(nameof({mappingContextParameterName}));")
                 //.WriteLine($"if ({sourceClassParameterName} == null) throw new ArgumentNullException(nameof({sourceClassParameterName}));")
