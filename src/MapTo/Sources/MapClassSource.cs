@@ -21,17 +21,24 @@ namespace MapTo.Sources
                 .WriteLine($"partial class {model.TypeIdentifierName}")
                 .WriteOpeningBracket();
 
-                // Class body
-                /*if (model.GenerateSecondaryConstructor)
-                {
-                    builder
-                        .GenerateSecondaryConstructor(model)
-                        .WriteLine();
-                }*/
-
+            // Class body
+            /*if (model.GenerateSecondaryConstructor)
+            {
                 builder
-                    .GeneratePrivateConstructor(model)
-                    .WriteLine()
+                    .GenerateSecondaryConstructor(model)
+                    .WriteLine();
+            }*/
+
+            builder
+                .GeneratePrivateConstructor(model)
+                .WriteLine();
+
+            if(PropertiesAreReadOnly(model))
+            {
+                builder.GenerateUpdateMethod(model);
+            }
+
+            builder
                     //.GenerateFactoryMethod(model)
                     .GenerateUpdateMethod(model)
 
@@ -105,7 +112,7 @@ namespace MapTo.Sources
                     {
                         builder.WriteLine(property.MappedSourcePropertyTypeName is null
                             ? $"{property.Name} = {sourceClassParameterName}.{property.SourcePropertyName};"
-                            : $"{property.Name} = {mappingContextParameterName}.{MappingContextSource.MapMethodName}<{property.MappedSourcePropertyTypeName}, {property.Type}>({sourceClassParameterName}.{property.SourcePropertyName});");
+                            : "");
                     }
                 }
                 else
@@ -120,6 +127,16 @@ namespace MapTo.Sources
 
             }
             return builder;
+
+        }
+
+        private static bool PropertiesAreReadOnly(MappingModel model)
+        {
+            foreach (var property in model.MappedProperties)
+            {
+                if (!property.isReadOnly) return false;
+            }
+            return true ;
 
         }
 

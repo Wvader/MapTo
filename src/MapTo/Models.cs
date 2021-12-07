@@ -29,7 +29,8 @@ namespace MapTo
         ImmutableArray<string> TypeConverterParameters,
         string SourcePropertyName,
         string? MappedSourcePropertyTypeName,
-        string? EnumerableTypeArgument)
+        string? EnumerableTypeArgument,
+        bool isReadOnly)
     {
         public bool IsEnumerable => EnumerableTypeArgument is not null;
     }

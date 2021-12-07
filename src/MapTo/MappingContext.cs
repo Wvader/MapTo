@@ -137,6 +137,8 @@ namespace MapTo
                 return null;
             }
 
+           
+
             string? converterFullyQualifiedName = null;
             var converterParameters = ImmutableArray<string>.Empty;
             ITypeSymbol? mappedSourcePropertyType = null;
@@ -162,7 +164,9 @@ namespace MapTo
                 converterParameters.ToImmutableArray(),
                 sourceProperty.Name,
                 ToQualifiedDisplayName(mappedSourcePropertyType),
-                ToQualifiedDisplayName(enumerableTypeArgumentType));
+                ToQualifiedDisplayName(enumerableTypeArgumentType),
+               (sourceProperty as IPropertySymbol).IsReadOnly);
+;
         }
 
         protected bool TryGetMapTypeConverter(ISymbol property, IPropertySymbol sourceProperty, out string? converterFullyQualifiedName,
