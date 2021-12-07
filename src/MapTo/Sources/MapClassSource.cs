@@ -142,7 +142,7 @@ namespace MapTo.Sources
 
              builder
                 .GenerateUpdaterMethodsXmlDocs(model, sourceClassParameterName)
-                .WriteLine($"public void {model.Options.NullableReferenceSyntax}Update({model.SourceType}{model.Options.NullableReferenceSyntax} {sourceClassParameterName})")
+                .WriteLine($"public void Update({model.SourceType}{model.Options.NullableReferenceSyntax} {sourceClassParameterName})")
                 .WriteOpeningBracket()
                 .WriteProperties( model, sourceClassParameterName,"context" )
                 .WriteClosingBracket();
