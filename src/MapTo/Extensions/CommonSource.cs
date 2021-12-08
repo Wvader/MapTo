@@ -10,7 +10,7 @@ namespace MapTo.Extensions
     {
         internal static SourceCode GenerateStructOrClass(this MappingModel model, string structOrClass)
         {
-            const bool writeDebugInfo = false;
+            const bool writeDebugInfo = true;
 
             using var builder = new SourceBuilder()
                 .WriteLine(GeneratedFilesHeader)
@@ -88,7 +88,15 @@ namespace MapTo.Extensions
             return builder.WriteClosingBracket();
         }
 
-        private static bool IsMappedProperty(this System.Collections.Immutable.ImmutableArray<MappedProperty> properties, MappedProperty property) => properties.Contains(property);
+        private static bool IsMappedProperty(this System.Collections.Immutable.ImmutableArray<MappedProperty> properties, MappedProperty property) {
+
+            foreach(var prop in properties)
+            {
+                if (prop.FullyQualifiedType == property.FullyQualifiedType) return true;
+            }
+
+            return false;
+        }
 
         private static SourceBuilder TryWriteProperties(this SourceBuilder builder, System.Collections.Immutable.ImmutableArray<MappedProperty> properties, System.Collections.Immutable.ImmutableArray<MappedProperty>? otherProperties,
             string? sourceClassParameterName, string mappingContextParameterName, bool fromUpdate)
