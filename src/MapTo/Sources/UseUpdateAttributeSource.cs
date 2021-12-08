@@ -21,7 +21,7 @@ namespace MapTo.Sources
             {
                 builder
                     .WriteLine("/// <summary>")
-                    .WriteLine("/// Specifies that the annotated class can be mapped from the provided <see cref=\"SourceType\"/>.")
+                    .WriteLine("/// Specifies that the annotated class can be updatable.")
                     .WriteLine("/// </summary>");
             }
 

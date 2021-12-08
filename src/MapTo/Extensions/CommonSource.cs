@@ -10,7 +10,7 @@ namespace MapTo.Extensions
     {
         internal static SourceCode GenerateStructOrClass(this MappingModel model, string structOrClass)
         {
-            const bool writeDebugInfo = true;
+            const bool writeDebugInfo = false;
 
             using var builder = new SourceBuilder()
                 .WriteLine(GeneratedFilesHeader)
@@ -62,27 +62,23 @@ namespace MapTo.Extensions
 
             var baseConstructor = /*model.HasMappedBaseClass ? $" : base({mappingContextParameterName}, {sourceClassParameterName})" :*/ string.Empty;
 
-            var readOnlyProperties = model.TypeProperties.GetReadOnlyMappedProperties();
-
             var stringBuilder = new StringBuilder();
 
-            for (int i = 0; i < readOnlyProperties.Length; i++)
+            foreach (var property in model.TypeProperties)
             {
-                var property = readOnlyProperties[i];
-                if(!model.SourceProperties.IsMappedProperty(property))
+                if (!model.SourceProperties.IsMappedProperty(property))
                 {
                     stringBuilder.Append(", ");
                     stringBuilder.Append($"{property.FullyQualifiedType} {property.SourcePropertyName.ToCamelCase()}");
                 }
-                
             }
-
+   
             var readOnlyPropertiesArguments = stringBuilder.ToString();
 
             builder
                 .WriteLine($"public {model.TypeIdentifierName}({model.SourceType} {sourceClassParameterName}{readOnlyPropertiesArguments}){baseConstructor}")
                 .WriteOpeningBracket()
-                .TryWriteProperties(model.SourceProperties, readOnlyProperties, sourceClassParameterName, mappingContextParameterName, false);
+                .TryWriteProperties(model.SourceProperties, model.TypeProperties, sourceClassParameterName, mappingContextParameterName, false);
 
             // End constructor declaration
             return builder.WriteClosingBracket();

@@ -38,7 +38,7 @@ namespace MapTo.Extensions
                         .WriteComment($" IsEnumerable                   {item.IsEnumerable}")
                         .WriteComment($" SourcePropertyName             {item.SourcePropertyName}")
                         .WriteComment($" TypeSymbol                     {item.FullyQualifiedType.ToString()}")
-                        .WriteComment($" TypeSymbol                     {item.FullyQualifiedType.ToString()}")
+                        .WriteComment($" isReadOnly                     {item.isReadOnly.ToString()}")
                         .WriteLine();
             }
 
