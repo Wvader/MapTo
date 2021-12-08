@@ -4,12 +4,18 @@ using System.Text;
 
 namespace TestConsoleApp.Data.Models
 {
+   
     public class Employee
     {
-        public int Id { get; set; }
+        public int Id { get;  }
 
-        public string EmployeeCode { get; set; }
+        public string EmployeeCode { get; }
 
-        public Manager Manager { get; set; }
+        public Employee(int id, string employeeCode)
+        {
+            Id = id;
+            EmployeeCode = employeeCode;
+        }
+
     }
 }

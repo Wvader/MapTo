@@ -24,12 +24,14 @@ namespace MapTo
 
     internal record MappedProperty(
         string Name,
+        string FullyQualifiedType,
         string Type,
         string? TypeConverter,
         ImmutableArray<string> TypeConverterParameters,
         string SourcePropertyName,
         string? MappedSourcePropertyTypeName,
-        string? EnumerableTypeArgument)
+        string? EnumerableTypeArgument,
+        bool isReadOnly)
     {
         public bool IsEnumerable => EnumerableTypeArgument is not null;
     }
@@ -43,7 +45,9 @@ namespace MapTo
         string SourceNamespace,
         string SourceTypeIdentifierName,
         string SourceTypeFullName,
-        ImmutableArray<MappedProperty> MappedProperties,
+        bool IsTypeUpdatable,
+        ImmutableArray<MappedProperty> SourceProperties,
+        ImmutableArray<MappedProperty> TypeProperties,
         bool HasMappedBaseClass,
         ImmutableArray<string> Usings,
         bool GenerateSecondaryConstructor

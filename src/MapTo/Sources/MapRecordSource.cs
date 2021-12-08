@@ -96,9 +96,9 @@ namespace MapTo.Sources
         private static SourceBuilder WriteProperties(this SourceBuilder builder, MappingModel model, string sourceClassParameterName,
             string mappingContextParameterName)
         {
-            for (var i = 0; i < model.MappedProperties.Length; i++)
+            for (var i = 0; i < model.SourceProperties.Length; i++)
             {
-                var property = model.MappedProperties[i];
+                var property = model.SourceProperties[i];
                 if (property.TypeConverter is null)
                 {
                     if (property.IsEnumerable)
@@ -123,7 +123,7 @@ namespace MapTo.Sources
                         $"{property.Name}: new {property.TypeConverter}().Convert({sourceClassParameterName}.{property.SourcePropertyName}, {parameters})");
                 }
 
-                if (i < model.MappedProperties.Length - 1)
+                if (i < model.SourceProperties.Length - 1)
                 {
                     builder.Write(", ");
                 }

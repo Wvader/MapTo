@@ -28,6 +28,7 @@ namespace MapTo
                 var options = SourceGenerationOptions.From(context);
 
                 var compilation = context.Compilation
+                    .AddSource(ref context, UseUpdateAttributeSource.Generate(options))
                     .AddSource(ref context, MapFromAttributeSource.Generate(options))
                     .AddSource(ref context, IgnorePropertyAttributeSource.Generate(options))
                     .AddSource(ref context, ITypeConverterSource.Generate(options))
