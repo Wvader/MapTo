@@ -22,7 +22,7 @@ namespace BlueWest.Data
 
     public partial struct FinanceTransaction
     {
-       public int Id { get; set; }
+       public int Id { get;  }
        public int UserId { get; set; }
        public FinanceTransactionType FinanceTransactionType { get; }
        public FinanceSymbol FinanceSymbol { get; }

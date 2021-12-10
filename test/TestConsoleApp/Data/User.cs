@@ -18,7 +18,7 @@ namespace BlueWest.Data
        public double BTCAmount { get; set; }
        public double LTCAmount { get; set; }
 
-        public List<FinanceTransaction> FinanceTransactions { get; set; }
+        public List<FinanceTransaction> FinanceTransactions { get;  }
 
         public User(int id, string name, string address, string btcAddress, string ltcAddress, double btcAmount, double ltcAmount, List<FinanceTransaction> financeTransactions)
         {
