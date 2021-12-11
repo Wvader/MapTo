@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using MapTo;
 
 namespace BlueWest.Data
 {
-    [MapFrom(typeof(FinanceTransaction))]
-
-     partial struct FinanceTransactionReadDto
+    
+    public partial struct FinanceTransactionInsertDto
     {
         public int UserId { get; set; }
         public FinanceTransactionType FinanceTransactionType { get; }

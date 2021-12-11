@@ -11,7 +11,6 @@ namespace BlueWest.Data
             Users = users;
         }
 
-     
         public int Length => Users.Count;
     }
 }

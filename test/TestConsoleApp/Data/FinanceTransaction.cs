@@ -20,6 +20,7 @@ namespace BlueWest.Data
         Sell
     }
 
+    [MapFrom(typeof(FinanceTransactionInsertDto))]
     public partial struct FinanceTransaction
     {
        public int Id { get;  }

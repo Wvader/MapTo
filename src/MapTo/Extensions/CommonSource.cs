@@ -10,7 +10,7 @@ namespace MapTo.Extensions
     {
         internal static SourceCode GenerateStructOrClass(this MappingModel model, string structOrClass)
         {
-            const bool writeDebugInfo = false;
+            const bool writeDebugInfo = true;
 
             using var builder = new SourceBuilder()
                 .WriteLine(GeneratedFilesHeader)
@@ -66,7 +66,7 @@ namespace MapTo.Extensions
 
             foreach (var property in model.TypeProperties)
             {
-                if (!model.SourceProperties.IsMappedProperty(property))
+                if (!model.TypeProperties.IsMappedProperty(property))
                 {
                     stringBuilder.Append(", ");
                     stringBuilder.Append($"{property.FullyQualifiedType} {property.SourcePropertyName.ToCamelCase()}");
@@ -88,7 +88,7 @@ namespace MapTo.Extensions
 
             foreach(var prop in properties)
             {
-                if (prop.FullyQualifiedType == property.FullyQualifiedType) return true;
+                if (prop.FullyQualifiedType.ToString() == property.FullyQualifiedType.ToString()) return true;
             }
 
             return false;

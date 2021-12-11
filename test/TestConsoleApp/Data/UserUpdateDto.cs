@@ -15,7 +15,5 @@ namespace BlueWest.Data
         public double BTCAmount { get; set; }
         public double LTCAmount { get; set; }
 
-       
-
     }
 }
