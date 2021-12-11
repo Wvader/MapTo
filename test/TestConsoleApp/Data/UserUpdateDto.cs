@@ -4,16 +4,16 @@ namespace BlueWest.Data
 {
     [MapFrom(typeof(User))]
 
-    public partial struct UserUpdateDto
+    public partial class UserUpdateDto
     {
-        public string Name { get; set; } 
-        public string Address { get; set; }
-        
-        public string BTCAddress { get; set; }
-        public string LTCAddress { get; set; }
+        public string Name;
+        public string Address;
 
-        public double BTCAmount { get; set; }
-        public double LTCAmount { get; set; }
+        public string BTCAddress;
+        public string LTCAddress;
+
+        public double BTCAmount;
+        public double LTCAmount;
 
     }
 }

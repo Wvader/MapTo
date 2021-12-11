@@ -11,20 +11,20 @@ namespace MapTo
         internal ClassMappingContext(Compilation compilation, SourceGenerationOptions sourceGenerationOptions, TypeDeclarationSyntax typeSyntax)
             : base(compilation, sourceGenerationOptions, typeSyntax) { }
 
-        protected override ImmutableArray<MappedProperty> GetSourceMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass)
+        protected override ImmutableArray<MappedMember> GetSourceMappedFields(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass)
         {
-            var sourceProperties = sourceTypeSymbol.GetAllMembers().OfType<IPropertySymbol>().ToArray();
+            var sourceProperties = sourceTypeSymbol.GetAllMembers().OfType<IFieldSymbol>().ToArray();
 
             return typeSymbol
-                .GetAllMembers(!isInheritFromMappedBaseClass)
-                .OfType<IPropertySymbol>()
+                .GetAllMembers()
+                .OfType<IFieldSymbol>()
                 .Where(p => !p.HasAttribute(IgnorePropertyAttributeTypeSymbol))
-                .Select(property => MapProperty(sourceTypeSymbol, sourceProperties, property))
+                .Select(property => MapField(sourceTypeSymbol, sourceProperties, property))
                 .Where(mappedProperty => mappedProperty is not null)
                 .ToImmutableArray()!;
         }
 
-        protected override ImmutableArray<MappedProperty> GetTypeMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass)
+        protected override ImmutableArray<MappedMember> GetSourceMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool hasInheritedClass)
         {
             var sourceProperties = sourceTypeSymbol.GetAllMembers().OfType<IPropertySymbol>().ToArray();
 
@@ -32,9 +32,36 @@ namespace MapTo
                 .GetAllMembers()
                 .OfType<IPropertySymbol>()
                 .Where(p => !p.HasAttribute(IgnorePropertyAttributeTypeSymbol))
-                .Select(property => MapProperty(typeSymbol, sourceProperties, property))
+                .Select(property => MapProperty(sourceTypeSymbol, sourceProperties, property))
                 .Where(mappedProperty => mappedProperty is not null)
                 .ToImmutableArray()!;
         }
+
+        protected override ImmutableArray<MappedMember> GetTypeMappedFields(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass)
+        {
+            var sourceProperties = sourceTypeSymbol.GetAllMembers().OfType<IFieldSymbol>().ToArray();
+
+            return sourceTypeSymbol
+                .GetAllMembers()
+                .OfType<IFieldSymbol>()
+                .Where(p => !p.HasAttribute(IgnorePropertyAttributeTypeSymbol))
+                .Select(property => MapFieldSimple(typeSymbol, property))
+                .Where(mappedProperty => mappedProperty is not null)
+                .ToImmutableArray()!;
+        }
+
+        protected override ImmutableArray<MappedMember> GetTypeMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool hasInheritedClass)
+        {
+            var sourceProperties = sourceTypeSymbol.GetAllMembers().OfType<IPropertySymbol>().ToArray();
+
+            return sourceTypeSymbol
+                .GetAllMembers()
+                .OfType<IPropertySymbol>()
+                .Where(p => !p.HasAttribute(IgnorePropertyAttributeTypeSymbol))
+                .Select(property => MapPropertySimple(typeSymbol, property))
+                .Where(mappedProperty => mappedProperty is not null)
+                .ToImmutableArray()!;
+        }
+
     }
 }

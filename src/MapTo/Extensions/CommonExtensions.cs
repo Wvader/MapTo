@@ -28,7 +28,7 @@ namespace MapTo.Extensions
 
         }
 
-        internal static SourceBuilder WriteMappedProperties(this SourceBuilder builder, System.Collections.Immutable.ImmutableArray<MappedProperty> mappedProperties)
+        internal static SourceBuilder WriteMappedProperties(this SourceBuilder builder, System.Collections.Immutable.ImmutableArray<MappedMember> mappedProperties)
         {
             foreach (var item in mappedProperties)
             {

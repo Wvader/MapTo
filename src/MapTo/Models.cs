@@ -22,7 +22,7 @@ namespace MapTo
 
     internal record SourceCode(string Text, string HintName);
 
-    internal record MappedProperty(
+    internal record MappedMember(
         string Name,
         string FullyQualifiedType,
         string Type,
@@ -46,8 +46,10 @@ namespace MapTo
         string SourceTypeIdentifierName,
         string SourceTypeFullName,
         bool IsTypeUpdatable,
-        ImmutableArray<MappedProperty> SourceProperties,
-        ImmutableArray<MappedProperty> TypeProperties,
+        ImmutableArray<MappedMember> SourceProperties,
+        ImmutableArray<MappedMember> TypeProperties,
+        ImmutableArray<MappedMember> SourceFields,
+        ImmutableArray<MappedMember> TypeFields,
         bool HasMappedBaseClass,
         ImmutableArray<string> Usings,
         bool GenerateSecondaryConstructor

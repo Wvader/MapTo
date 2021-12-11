@@ -32,7 +32,13 @@ namespace MapTo.Extensions
                 .WriteMappedProperties(model.TypeProperties)
                 .WriteLine()
                 .WriteComment("Source properties")
-                .WriteMappedProperties(model.SourceProperties)
+                .WriteLine()
+                .WriteComment("Type fields")
+                .WriteComment()
+                .WriteMappedProperties(model.TypeFields)
+                .WriteLine()
+                .WriteComment("Source fields")
+                .WriteMappedProperties(model.SourceFields)
                 .WriteLine();
 
             builder
@@ -65,7 +71,7 @@ namespace MapTo.Extensions
 
             var stringBuilder = new StringBuilder();
 
-            var otherProperties = new List<MappedProperty>();
+            var otherProperties = new List<MappedMember>();
 
             foreach (var property in model.TypeProperties)
             {
@@ -76,19 +82,30 @@ namespace MapTo.Extensions
                     otherProperties.Add(property);
                 }
             }
-   
+
+            foreach (var property in model.TypeFields)
+            {
+                if (!model.SourceFields.IsMappedProperty(property))
+                {
+                    stringBuilder.Append(", ");
+                    stringBuilder.Append($"{property.FullyQualifiedType} {property.SourcePropertyName.ToCamelCase()}");
+                    otherProperties.Add(property);
+                }
+            }
+
+
             var readOnlyPropertiesArguments = stringBuilder.ToString();
 
             builder
                 .WriteLine($"public {model.TypeIdentifierName}({model.SourceType} {sourceClassParameterName}{readOnlyPropertiesArguments}){baseConstructor}")
                 .WriteOpeningBracket()
-                .TryWriteProperties(model.SourceProperties, otherProperties.ToArray().ToImmutableArray(), sourceClassParameterName, mappingContextParameterName, false);
+                .WriteAssignmentMethod(model, otherProperties.ToArray().ToImmutableArray(), sourceClassParameterName, mappingContextParameterName, false);
 
             // End constructor declaration
             return builder.WriteClosingBracket();
         }
 
-        private static bool IsMappedProperty(this System.Collections.Immutable.ImmutableArray<MappedProperty> properties, MappedProperty property) {
+        private static bool IsMappedProperty(this System.Collections.Immutable.ImmutableArray<MappedMember> properties, MappedMember property) {
 
             foreach(var prop in properties)
             {
@@ -98,44 +115,25 @@ namespace MapTo.Extensions
             return false;
         }
 
-        private static SourceBuilder TryWriteProperties(this SourceBuilder builder, System.Collections.Immutable.ImmutableArray<MappedProperty> properties, System.Collections.Immutable.ImmutableArray<MappedProperty>? otherProperties,
+        private static SourceBuilder WriteAssignmentMethod(this SourceBuilder builder, MappingModel model, System.Collections.Immutable.ImmutableArray<MappedMember>? otherProperties,
             string? sourceClassParameterName, string mappingContextParameterName, bool fromUpdate)
         {
-            if (fromUpdate)
-            {
-                properties = properties.GetWritableMappedProperties();
-            }
 
-            foreach (var property in properties)
+            foreach (var property in model.SourceProperties)
             {
                 if (property.isReadOnly && fromUpdate) continue;
 
-                if (property.TypeConverter is null)
-                {
-                    if (property.IsEnumerable)
-                    {
-                        builder.WriteLine(
-                            $"{property.Name} = {sourceClassParameterName}.{property.SourcePropertyName}.Select({mappingContextParameterName}.{MappingContextSource.MapMethodName}<{property.MappedSourcePropertyTypeName}, {property.EnumerableTypeArgument}>).ToList();");
-                    }
-                    else
-                    {
-                        builder.WriteLine(property.MappedSourcePropertyTypeName is null
-                            ? $"{property.Name} = {sourceClassParameterName}.{property.SourcePropertyName};"
-                            : "");
-                    }
-                }
-                else
-                {
-                    var parameters = property.TypeConverterParameters.IsEmpty
-                        ? "null"
-                        : $"new object[] {{ {string.Join(", ", property.TypeConverterParameters)} }}";
-
-                    builder.WriteLine(
-                        $"{property.Name} = new {property.TypeConverter}().Convert({sourceClassParameterName}.{property.SourcePropertyName}, {parameters});");
-                }
+                builder.WriteLine( $"{property.Name} = {sourceClassParameterName}.{property.SourcePropertyName};");
 
             }
 
+            foreach (var property in model.SourceFields)
+            {
+                if (property.isReadOnly && fromUpdate) continue;
+
+                builder.WriteLine($"{property.Name} = {sourceClassParameterName}.{property.SourcePropertyName};");
+
+            }
 
             if (otherProperties == null) return builder;
 
@@ -160,7 +158,7 @@ namespace MapTo.Extensions
                .GenerateUpdaterMethodsXmlDocs(model, sourceClassParameterName)
                .WriteLine($"public void Update({model.SourceType} {sourceClassParameterName})")
                .WriteOpeningBracket()
-               .TryWriteProperties(model.SourceProperties, null, sourceClassParameterName, "context", true)
+               .WriteAssignmentMethod(model, null, sourceClassParameterName, "context", true)
                .WriteClosingBracket();
 
             return builder;

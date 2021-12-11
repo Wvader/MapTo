@@ -11,7 +11,12 @@ namespace MapTo
         internal RecordMappingContext(Compilation compilation, SourceGenerationOptions sourceGenerationOptions, TypeDeclarationSyntax typeSyntax)
             : base(compilation, sourceGenerationOptions, typeSyntax) { }
 
-        protected override ImmutableArray<MappedProperty> GetSourceMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass)
+        protected override ImmutableArray<MappedMember> GetSourceMappedFields(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override ImmutableArray<MappedMember> GetSourceMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass)
         {
             var sourceProperties = sourceTypeSymbol.GetAllMembers().OfType<IPropertySymbol>().ToArray();
             return typeSymbol.GetMembers()
@@ -25,7 +30,12 @@ namespace MapTo
                 .ToImmutableArray()!;
         }
 
-        protected override ImmutableArray<MappedProperty> GetTypeMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass)
+        protected override ImmutableArray<MappedMember> GetTypeMappedFields(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override ImmutableArray<MappedMember> GetTypeMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass)
         {
             var sourceProperties = sourceTypeSymbol.GetAllMembers().OfType<IPropertySymbol>().ToArray();
             return typeSymbol.GetMembers()

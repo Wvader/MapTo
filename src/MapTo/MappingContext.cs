@@ -11,8 +11,8 @@ namespace MapTo
 {
     internal static class MappingContextExtensions
     {
-        internal static ImmutableArray<MappedProperty> GetReadOnlyMappedProperties(this ImmutableArray<MappedProperty> mappedProperties) => mappedProperties.Where(p => p.isReadOnly).ToImmutableArray()!;
-        internal static ImmutableArray<MappedProperty> GetWritableMappedProperties(this ImmutableArray<MappedProperty> mappedProperties) => mappedProperties.Where(p => !p.isReadOnly).ToImmutableArray()!;
+        internal static ImmutableArray<MappedMember> GetReadOnlyMappedProperties(this ImmutableArray<MappedMember> mappedProperties) => mappedProperties.Where(p => p.isReadOnly).ToImmutableArray()!;
+        internal static ImmutableArray<MappedMember> GetWritableMappedProperties(this ImmutableArray<MappedMember> mappedProperties) => mappedProperties.Where(p => !p.isReadOnly).ToImmutableArray()!;
     }
 
     internal abstract class MappingContext
@@ -109,9 +109,24 @@ namespace MapTo
 
             return sourceProperties.SingleOrDefault(p => p.Name == propertyName);
         }
+        protected IFieldSymbol? FindSourceField(IEnumerable<IFieldSymbol> sourceProperties, ISymbol property)
+        {
+            var propertyName = property
+                .GetAttribute(MapPropertyAttributeTypeSymbol)
+                ?.NamedArguments
+                .SingleOrDefault(a => a.Key == MapPropertyAttributeSource.SourcePropertyNamePropertyName)
+                .Value.Value as string ?? property.Name;
 
-        protected abstract ImmutableArray<MappedProperty> GetSourceMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass);
-        protected abstract ImmutableArray<MappedProperty> GetTypeMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass);
+            return sourceProperties.SingleOrDefault(p => p.Name == propertyName);
+        }
+
+        protected abstract ImmutableArray<MappedMember> GetSourceMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass);
+        protected abstract ImmutableArray<MappedMember> GetTypeMappedProperties(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass);
+
+
+        protected abstract ImmutableArray<MappedMember> GetSourceMappedFields(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass);
+        protected abstract ImmutableArray<MappedMember> GetTypeMappedFields(ITypeSymbol typeSymbol, ITypeSymbol sourceTypeSymbol, bool isInheritFromMappedBaseClass);
+
 
         protected INamedTypeSymbol? GetSourceTypeSymbol(TypeDeclarationSyntax typeDeclarationSyntax, SemanticModel? semanticModel = null) =>
             GetSourceTypeSymbol(typeDeclarationSyntax.GetAttribute(MapFromAttributeSource.AttributeName), semanticModel);
@@ -144,7 +159,7 @@ namespace MapTo
             return TypeSyntax.GetAttribute("UseUpdate") != null;
         }
 
-        protected virtual MappedProperty? MapProperty(ISymbol sourceTypeSymbol, IReadOnlyCollection<IPropertySymbol> sourceProperties, ISymbol property)
+        protected virtual MappedMember? MapProperty(ISymbol sourceTypeSymbol, IReadOnlyCollection<IPropertySymbol> sourceProperties, ISymbol property)
         {
             var sourceProperty = FindSourceProperty(sourceProperties, property);
             if (sourceProperty is null || !property.TryGetTypeSymbol(out var propertyType))
@@ -160,7 +175,7 @@ namespace MapTo
 
             if (!Compilation.HasCompatibleTypes(sourceProperty, property))
             {
-                if (!TryGetMapTypeConverter(property, sourceProperty, out converterFullyQualifiedName, out converterParameters) &&
+                if (!TryGetMapTypeConverterForProperty(property, sourceProperty, out converterFullyQualifiedName, out converterParameters) &&
                     !TryGetNestedObjectMappings(property, out mappedSourcePropertyType, out enumerableTypeArgumentType))
                 {
                     return null;
@@ -172,7 +187,7 @@ namespace MapTo
             AddUsingIfRequired(mappedSourcePropertyType);
 
 
-            return new MappedProperty(
+            return new MappedMember(
                 property.Name,
                 property.GetTypeSymbol().ToString(),
                 ToQualifiedDisplayName(propertyType) ?? propertyType.Name,
@@ -184,7 +199,52 @@ namespace MapTo
                (property as IPropertySymbol).IsReadOnly);
 ;
         }
-        protected virtual MappedProperty? MapPropertySimple(ISymbol sourceTypeSymbol, ISymbol property)
+
+        protected virtual MappedMember? MapField(ISymbol sourceTypeSymbol, IReadOnlyCollection<IFieldSymbol> sourceProperties, ISymbol property)
+        {
+            var sourceProperty = FindSourceField(sourceProperties, property);
+            if (sourceProperty is null || !property.TryGetTypeSymbol(out var propertyType))
+            {
+                return null;
+            }
+
+            if (property is IFieldSymbol symbol)
+            {
+                if (symbol.AssociatedSymbol != null) return null;
+            }
+
+            string? converterFullyQualifiedName = null;
+            var converterParameters = ImmutableArray<string>.Empty;
+            ITypeSymbol? mappedSourcePropertyType = null;
+            ITypeSymbol? enumerableTypeArgumentType = null;
+
+            if (!Compilation.HasCompatibleTypes(sourceProperty, property))
+            {
+                if (!TryGetMapTypeConverterForField(property, sourceProperty, out converterFullyQualifiedName, out converterParameters) &&
+                    !TryGetNestedObjectMappings(property, out mappedSourcePropertyType, out enumerableTypeArgumentType))
+                {
+                    return null;
+                }
+            }
+
+            AddUsingIfRequired(propertyType);
+            AddUsingIfRequired(enumerableTypeArgumentType);
+            AddUsingIfRequired(mappedSourcePropertyType);
+
+
+            return new MappedMember(
+                property.Name,
+                property.GetTypeSymbol().ToString(),
+                ToQualifiedDisplayName(propertyType) ?? propertyType.Name,
+                converterFullyQualifiedName,
+                converterParameters.ToImmutableArray(),
+                sourceProperty.Name,
+                ToQualifiedDisplayName(mappedSourcePropertyType),
+                ToQualifiedDisplayName(enumerableTypeArgumentType),
+               (property as IFieldSymbol).IsReadOnly);
+            ;
+        }
+        protected virtual MappedMember? MapPropertySimple(ISymbol sourceTypeSymbol, ISymbol property)
         {
             if (!property.TryGetTypeSymbol(out var propertyType))
             {
@@ -203,7 +263,7 @@ namespace MapTo
             AddUsingIfRequired(mappedSourcePropertyType);
 
            
-            return new MappedProperty(
+            return new MappedMember(
                 property.Name,
                 property.GetTypeSymbol().ToString(),
                 ToQualifiedDisplayName(propertyType) ?? propertyType.Name,
@@ -215,7 +275,44 @@ namespace MapTo
                (property as IPropertySymbol).IsReadOnly);
             ;
         }
-        protected bool TryGetMapTypeConverter(ISymbol property, IPropertySymbol sourceProperty, out string? converterFullyQualifiedName,
+
+        protected virtual MappedMember? MapFieldSimple(ISymbol sourceTypeSymbol, ISymbol property)
+        {
+            if (!property.TryGetTypeSymbol(out var propertyType))
+            {
+                return null;
+            }
+
+            if(property is IFieldSymbol symbol)
+            {
+                if (symbol.AssociatedSymbol != null) return null;
+            }
+
+
+            string? converterFullyQualifiedName = null;
+            var converterParameters = ImmutableArray<string>.Empty;
+            ITypeSymbol? mappedSourcePropertyType = null;
+            ITypeSymbol? enumerableTypeArgumentType = null;
+
+
+            AddUsingIfRequired(propertyType);
+            AddUsingIfRequired(enumerableTypeArgumentType);
+            AddUsingIfRequired(mappedSourcePropertyType);
+
+
+            return new MappedMember(
+                property.Name,
+                property.GetTypeSymbol().ToString(),
+                ToQualifiedDisplayName(propertyType) ?? propertyType.Name,
+                converterFullyQualifiedName,
+                converterParameters.ToImmutableArray(),
+                property.Name,
+                ToQualifiedDisplayName(mappedSourcePropertyType),
+                ToQualifiedDisplayName(enumerableTypeArgumentType),
+               (property as IFieldSymbol).IsReadOnly);
+            ;
+        }
+        protected bool TryGetMapTypeConverterForProperty(ISymbol property, IPropertySymbol sourceProperty, out string? converterFullyQualifiedName,
             out ImmutableArray<string> converterParameters)
         {
             converterFullyQualifiedName = null;
@@ -232,7 +329,7 @@ namespace MapTo
                 return false;
             }
 
-            var baseInterface = GetTypeConverterBaseInterface(converterTypeSymbol, property, sourceProperty);
+            var baseInterface = GetTypeConverterBaseInterfaceForProperty(converterTypeSymbol, property, sourceProperty);
             if (baseInterface is null)
             {
                 AddDiagnostic(DiagnosticsFactory.InvalidTypeConverterGenericTypesError(property, sourceProperty));
@@ -243,7 +340,34 @@ namespace MapTo
             converterParameters = GetTypeConverterParameters(typeConverterAttribute);
             return true;
         }
+        protected bool TryGetMapTypeConverterForField(ISymbol property, IFieldSymbol sourceProperty, out string? converterFullyQualifiedName,
+            out ImmutableArray<string> converterParameters)
+        {
+            converterFullyQualifiedName = null;
+            converterParameters = ImmutableArray<string>.Empty;
 
+            if (!Diagnostics.IsEmpty())
+            {
+                return false;
+            }
+
+            var typeConverterAttribute = property.GetAttribute(MapTypeConverterAttributeTypeSymbol);
+            if (typeConverterAttribute?.ConstructorArguments.First().Value is not INamedTypeSymbol converterTypeSymbol)
+            {
+                return false;
+            }
+
+            var baseInterface = GetTypeConverterBaseInterfaceForField(converterTypeSymbol, property, sourceProperty);
+            if (baseInterface is null)
+            {
+                //AddDiagnostic(DiagnosticsFactory.InvalidTypeConverterGenericTypesError(property, null));
+                return false;
+            }
+
+            converterFullyQualifiedName = converterTypeSymbol.ToDisplayString();
+            converterParameters = GetTypeConverterParameters(typeConverterAttribute);
+            return true;
+        }
         protected bool TryGetNestedObjectMappings(ISymbol property, out ITypeSymbol? mappedSourcePropertyType, out ITypeSymbol? enumerableTypeArgument)
         {
             mappedSourcePropertyType = null;
@@ -313,15 +437,18 @@ namespace MapTo
             var shouldGenerateSecondaryConstructor = ShouldGenerateSecondaryConstructor(semanticModel, sourceTypeSymbol);
 
             var mappedProperties = GetSourceMappedProperties(typeSymbol, sourceTypeSymbol, isTypeInheritFromMappedBaseClass);
-            if (!mappedProperties.Any())
+            var mappedFields = GetSourceMappedFields(typeSymbol, sourceTypeSymbol, isTypeInheritFromMappedBaseClass);
+
+            /*if (!mappedProperties.Any())
             {
                 AddDiagnostic(DiagnosticsFactory.NoMatchingPropertyFoundError(TypeSyntax.GetLocation(), typeSymbol, sourceTypeSymbol));
                 return null;
-            }
+            }*/
 
             AddUsingIfRequired(mappedProperties.Any(p => p.IsEnumerable), "System.Linq");
 
             var allProperties = GetTypeMappedProperties(sourceTypeSymbol, typeSymbol , isTypeInheritFromMappedBaseClass);
+            var allFields = GetTypeMappedFields(sourceTypeSymbol, typeSymbol, isTypeInheritFromMappedBaseClass);
 
             return new MappingModel(
                 SourceGenerationOptions,
@@ -335,6 +462,8 @@ namespace MapTo
                 isTypeUpdatable,
                 mappedProperties,
                 allProperties,
+                mappedFields,
+                allFields,
                 isTypeInheritFromMappedBaseClass,
                 Usings,
                 shouldGenerateSecondaryConstructor);
@@ -342,7 +471,21 @@ namespace MapTo
 
        
 
-        private INamedTypeSymbol? GetTypeConverterBaseInterface(ITypeSymbol converterTypeSymbol, ISymbol property, IPropertySymbol sourceProperty)
+        private INamedTypeSymbol? GetTypeConverterBaseInterfaceForProperty(ITypeSymbol converterTypeSymbol, ISymbol property, IPropertySymbol sourceProperty)
+        {
+            if (!property.TryGetTypeSymbol(out var propertyType))
+            {
+                return null;
+            }
+
+            return converterTypeSymbol.AllInterfaces
+                .SingleOrDefault(i =>
+                    i.TypeArguments.Length == 2 &&
+                    SymbolEqualityComparer.Default.Equals(i.ConstructedFrom, TypeConverterInterfaceTypeSymbol) &&
+                    SymbolEqualityComparer.Default.Equals(sourceProperty.Type, i.TypeArguments[0]) &&
+                    SymbolEqualityComparer.Default.Equals(propertyType, i.TypeArguments[1]));
+        }
+        private INamedTypeSymbol? GetTypeConverterBaseInterfaceForField(ITypeSymbol converterTypeSymbol, ISymbol property, IFieldSymbol sourceProperty)
         {
             if (!property.TryGetTypeSymbol(out var propertyType))
             {
