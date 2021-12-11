@@ -69,7 +69,7 @@ namespace MapTo.Extensions
 
             foreach (var property in model.TypeProperties)
             {
-                if (!model.TypeProperties.IsMappedProperty(property) || !model.SourceProperties.IsMappedProperty(property))
+                if (!model.SourceProperties.IsMappedProperty(property))
                 {
                     stringBuilder.Append(", ");
                     stringBuilder.Append($"{property.FullyQualifiedType} {property.SourcePropertyName.ToCamelCase()}");
