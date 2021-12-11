@@ -92,7 +92,7 @@ namespace MapTo.Extensions
 
             foreach(var prop in properties)
             {
-                if (prop.FullyQualifiedType.ToString() == property.FullyQualifiedType.ToString()) return true;
+                if (prop.Name == property.Name) return true;
             }
 
             return false;

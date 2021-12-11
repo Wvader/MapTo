@@ -16,5 +16,7 @@ namespace BlueWest.Data
         public double Quantity { get; } // Bought
         public double Fee { get; }
         public DateTime DateTime { get; }
+
+        public string ReadData { get; }
     }
 }

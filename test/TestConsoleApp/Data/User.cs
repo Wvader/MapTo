@@ -6,7 +6,7 @@ using MapTo;
 namespace BlueWest.Data
 {
     [MapFrom(typeof(UserUpdateDto))]
-    public partial struct User 
+    public partial class User 
     {
        public int Id { get;  }
        public string Name { get; set; }
