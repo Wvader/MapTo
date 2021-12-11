@@ -27,8 +27,12 @@ namespace MapTo
         internal static Diagnostic NoMatchingPropertyTypeFoundError(ISymbol property) =>
             Create($"{ErrorId}031", property.Locations.FirstOrDefault(), $"Cannot create a map for '{property.ToDisplayString()}' property because source and destination types are not implicitly convertible. Consider using '{MapTypeConverterAttributeSource.FullyQualifiedName}' to provide a type converter or ignore the property using '{IgnorePropertyAttributeSource.FullyQualifiedName}'.");
 
-        internal static Diagnostic InvalidTypeConverterGenericTypesError(ISymbol property, IPropertySymbol sourceProperty) =>
-            Create($"{ErrorId}032", property.Locations.FirstOrDefault(), $"Cannot map '{property.ToDisplayString()}' property because the annotated converter does not implement '{RootNamespace}.{ITypeConverterSource.InterfaceName}<{sourceProperty.Type.ToDisplayString()}, {property.GetTypeSymbol()?.ToDisplayString()}>'.");
+        internal static Diagnostic InvalidTypeConverterGenericTypesError(ISymbol property, ISymbol memberSymbol)
+        {
+
+            return Create($"{ErrorId}032", property.Locations.FirstOrDefault(), $"Cannot map '{property.ToDisplayString()}' property because the annotated converter does not implement '{RootNamespace}.{ITypeConverterSource.InterfaceName}<{memberSymbol.ToString()}, {property.GetTypeSymbol()?.ToDisplayString()}>'.");
+
+        }
 
         internal static Diagnostic ConfigurationParseError(string error) =>
             Create($"{ErrorId}040", Location.None, error);

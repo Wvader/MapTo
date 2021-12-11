@@ -88,7 +88,7 @@ namespace MapTo.Extensions
             return builder.WriteClosingBracket();
         }
 
-        private static bool IsMappedProperty(this System.Collections.Immutable.ImmutableArray<MappedProperty> properties, MappedProperty property) {
+        private static bool IsMappedProperty(this ImmutableArray<MappedProperty> properties, MappedProperty property) {
 
             foreach(var prop in properties)
             {
@@ -98,7 +98,7 @@ namespace MapTo.Extensions
             return false;
         }
 
-        private static SourceBuilder TryWriteProperties(this SourceBuilder builder, System.Collections.Immutable.ImmutableArray<MappedProperty> properties, System.Collections.Immutable.ImmutableArray<MappedProperty>? otherProperties,
+        private static SourceBuilder TryWriteProperties(this SourceBuilder builder, ImmutableArray<MappedProperty> properties, System.Collections.Immutable.ImmutableArray<MappedProperty>? otherProperties,
             string? sourceClassParameterName, string mappingContextParameterName, bool fromUpdate)
         {
             if (fromUpdate)

@@ -8,17 +8,17 @@ namespace BlueWest.Data
     [MapFrom(typeof(UserUpdateDto))]
     public partial class User 
     {
-       public int Id { get;  }
-       public string Name { get; set; }
-       public string Address { get; set; }
-       
-       public string BTCAddress { get; set; } 
-       public string LTCAddress { get; set; } 
+        public readonly int Id;
+        public string Name;
+        public string Address;
 
-       public double BTCAmount { get; set; }
-       public double LTCAmount { get; set; }
+        public string BTCAddress;
+        public string LTCAddress;
 
-        public List<FinanceTransaction> FinanceTransactions { get;  }
+        public double BTCAmount;
+        public double LTCAmount;
+
+        public List<FinanceTransaction> FinanceTransactions;
 
         public User(int id, string name, string address, string btcAddress, string ltcAddress, double btcAmount, double ltcAmount, List<FinanceTransaction> financeTransactions)
         {

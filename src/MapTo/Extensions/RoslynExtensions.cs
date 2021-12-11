@@ -67,6 +67,9 @@ namespace MapTo.Extensions
                 case IPropertySymbol propertySymbol:
                     typeSymbol = propertySymbol.Type;
                     return true;
+                case IFieldSymbol fieldSymbol:
+                    typeSymbol = fieldSymbol.Type;
+                    return true;
 
                 case IParameterSymbol parameterSymbol:
                     typeSymbol = parameterSymbol.Type;

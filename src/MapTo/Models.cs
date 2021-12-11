@@ -46,6 +46,7 @@ namespace MapTo
         string SourceTypeIdentifierName,
         string SourceTypeFullName,
         bool IsTypeUpdatable,
+        bool IsJsonExtension,
         ImmutableArray<MappedProperty> SourceProperties,
         ImmutableArray<MappedProperty> TypeProperties,
         bool HasMappedBaseClass,
