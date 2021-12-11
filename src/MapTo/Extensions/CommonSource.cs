@@ -3,6 +3,7 @@ using static MapTo.Sources.Constants;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Collections.Immutable;
 
 namespace MapTo.Extensions
 {
@@ -64,12 +65,15 @@ namespace MapTo.Extensions
 
             var stringBuilder = new StringBuilder();
 
+            var otherProperties = new List<MappedProperty>();
+
             foreach (var property in model.TypeProperties)
             {
-                if (!model.TypeProperties.IsMappedProperty(property))
+                if (!model.TypeProperties.IsMappedProperty(property) || !model.SourceProperties.IsMappedProperty(property))
                 {
                     stringBuilder.Append(", ");
                     stringBuilder.Append($"{property.FullyQualifiedType} {property.SourcePropertyName.ToCamelCase()}");
+                    otherProperties.Add(property);
                 }
             }
    
@@ -78,7 +82,7 @@ namespace MapTo.Extensions
             builder
                 .WriteLine($"public {model.TypeIdentifierName}({model.SourceType} {sourceClassParameterName}{readOnlyPropertiesArguments}){baseConstructor}")
                 .WriteOpeningBracket()
-                .TryWriteProperties(model.SourceProperties, model.TypeProperties, sourceClassParameterName, mappingContextParameterName, false);
+                .TryWriteProperties(model.SourceProperties, otherProperties.ToArray().ToImmutableArray(), sourceClassParameterName, mappingContextParameterName, false);
 
             // End constructor declaration
             return builder.WriteClosingBracket();
@@ -137,7 +141,6 @@ namespace MapTo.Extensions
 
             foreach (var property in otherProperties)
             {
-                if(!properties.IsMappedProperty(property))
                     builder.WriteLine(property.MappedSourcePropertyTypeName is null
                     ? $"{property.Name} = {property.SourcePropertyName.ToCamelCase()};"
                     : "");
