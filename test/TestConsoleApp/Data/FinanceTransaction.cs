@@ -12,6 +12,15 @@ namespace BlueWest.Data
         LTC_EUR,
         LTC_BUSD,
         LTC_USDT
+
+
+
+
+
+
+
+
+
     }
 
     public enum FinanceTransactionType
