@@ -6,6 +6,7 @@ using MapTo;
 namespace BlueWest.Data
 {
     [MapFrom(typeof(UserUpdateDto))]
+    [JsonExtension]
     public partial class User 
     {
         public readonly int Id;

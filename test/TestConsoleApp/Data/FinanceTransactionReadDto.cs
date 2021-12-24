@@ -9,14 +9,14 @@ namespace BlueWest.Data
 
      partial struct FinanceTransactionReadDto
     {
-        public int UserId { get; set; }
-        public FinanceTransactionType FinanceTransactionType { get; }
-        public FinanceSymbol FinanceSymbol { get; }
-        public double Amount { get; } // To Buy
-        public double Quantity { get; } // Bought
-        public double Fee { get; }
-        public DateTime DateTime { get; }
+        public readonly int UserId;
+        public readonly FinanceTransactionType FinanceTransactionType;
+        public readonly FinanceSymbol FinanceSymbol;
+        public readonly double Amount; // To Buy
+        public readonly double Quantity; // Bought
+        public readonly double Fee;
+        public readonly DateTime DateTime;
 
-        public string ReadData { get; }
+        public readonly string ReadData;
     }
 }

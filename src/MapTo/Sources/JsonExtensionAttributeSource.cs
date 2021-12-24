@@ -2,15 +2,15 @@
 
 namespace MapTo.Sources
 {
-    internal static class ReadOnlyPropertyAttributeSource
+    internal static class JsonExtensionAttributeSource
     {
-        internal const string AttributeName = "ReadOnlyProperty";
+        internal const string AttributeName = "JsonExtension";
         internal const string AttributeClassName = AttributeName + "Attribute";
         internal const string FullyQualifiedName = RootNamespace + "." + AttributeClassName;
-
+        
         internal static SourceCode Generate(SourceGenerationOptions options)
         {
-            var builder = new SourceBuilder()
+            using var builder = new SourceBuilder()
                 .WriteLine(GeneratedFilesHeader)
                 .WriteLine("using System;")
                 .WriteLine()
@@ -21,16 +21,20 @@ namespace MapTo.Sources
             {
                 builder
                     .WriteLine("/// <summary>")
-                    .WriteLine("/// Specifies that the annotated property should be excluded.")
+                    .WriteLine("/// Specifies that the annotated class has a json extension.")
                     .WriteLine("/// </summary>");
             }
 
             builder
-                .WriteLine("[AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]")
-                .WriteLine($"public sealed class {AttributeClassName} : Attribute {{ }}")
-                .WriteClosingBracket();
+                .WriteLine("[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]")
+                .WriteLine($"public sealed class {AttributeName}Attribute : Attribute")
+                .WriteOpeningBracket();
 
-            return new(builder.ToString(), $"{AttributeClassName}.g.cs");
+            builder
+                .WriteClosingBracket() // class
+                .WriteClosingBracket(); // namespace
+
+            return new(builder.ToString(), $"{AttributeName}Attribute.g.cs");
         }
     }
 }

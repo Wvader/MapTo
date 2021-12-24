@@ -1,4 +1,5 @@
 ﻿using MapTo.Sources;
+using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,6 +11,21 @@ namespace MapTo.Extensions
         internal static SourceBuilder WriteComment(this SourceBuilder builder, string comment = "")
         {
             return builder.WriteLine($"// {comment}");
+        }
+        
+        internal static SourceBuilder WriteCommentArray(this SourceBuilder builder, IEnumerable<object> enumerable, string name = "")
+        {
+            builder.WriteComment($"Printing Array: {name}");
+            foreach (var o in enumerable)
+            {
+                if (o != null)
+                {
+                    builder.WriteComment($"     {o.ToString()}");
+                }
+            }
+            builder.WriteComment($"End printing Array: {name}");
+
+            return builder;
         }
 
         internal static SourceBuilder WriteModelInfo(this SourceBuilder builder, MappingModel model)
@@ -32,6 +48,16 @@ namespace MapTo.Extensions
         {
             foreach (var item in mappedProperties)
             {
+                string str = "";
+
+                if (item.NamedTypeSymbol != null)
+                foreach (var named in item.NamedTypeSymbol?.TypeArguments)
+                    {
+                        str += $"typeToString: {named.ToString()} ";
+                        bool? containedTypeIsJsonEXtension = named?.HasAttribute(MappingContext.JsonExtensionAttributeSymbol);
+                        str += $"typeArgumentTypeIsJsonExtensioN: {containedTypeIsJsonEXtension.ToString()}";
+                    }
+
                 builder .WriteComment($" Name                           {item.Name}")
                         .WriteComment($" Type                           {item.Type}")
                         .WriteComment($" MappedSourcePropertyTypeName   {item.MappedSourcePropertyTypeName}")
@@ -41,6 +67,10 @@ namespace MapTo.Extensions
                         .WriteComment($" SourcePropertyName             {item.SourcePropertyName}")
                         .WriteComment($" TypeSymbol                     {item.FullyQualifiedType.ToString()}")
                         .WriteComment($" isReadOnly                     {item.isReadOnly.ToString()}")
+                        .WriteComment($" isEnumerable                   {item.isEnumerable.ToString()}")
+                        .WriteComment($" INamedTypeSymbol               {item.NamedTypeSymbol?.ToString()}")
+                        .WriteComment($" INamedTypeSymbolTypeArguments  {str}")
+
                         .WriteLine();
             }
 

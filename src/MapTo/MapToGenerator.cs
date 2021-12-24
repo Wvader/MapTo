@@ -29,8 +29,9 @@ namespace MapTo
 
                 var compilation = context.Compilation
                     .AddSource(ref context, UseUpdateAttributeSource.Generate(options))
+                    .AddSource(ref context, JsonExtensionAttributeSource.Generate(options))
                     .AddSource(ref context, MapFromAttributeSource.Generate(options))
-                    .AddSource(ref context, IgnorePropertyAttributeSource.Generate(options))
+                    .AddSource(ref context, IgnoreMemberAttributeSource.Generate(options))
                     .AddSource(ref context, ITypeConverterSource.Generate(options))
                     .AddSource(ref context, MapTypeConverterAttributeSource.Generate(options))
                     .AddSource(ref context, MapPropertyAttributeSource.Generate(options))

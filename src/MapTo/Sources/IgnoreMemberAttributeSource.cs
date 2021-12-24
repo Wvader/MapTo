@@ -2,9 +2,9 @@
 
 namespace MapTo.Sources
 {
-    internal static class ReadOnlyPropertyAttributeSource
+    internal static class IgnoreMemberAttributeSource
     {
-        internal const string AttributeName = "ReadOnlyProperty";
+        internal const string AttributeName = "IgnoreMemberMapTo";
         internal const string AttributeClassName = AttributeName + "Attribute";
         internal const string FullyQualifiedName = RootNamespace + "." + AttributeClassName;
 
@@ -26,7 +26,7 @@ namespace MapTo.Sources
             }
 
             builder
-                .WriteLine("[AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]")
+                .WriteLine("[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]")
                 .WriteLine($"public sealed class {AttributeClassName} : Attribute {{ }}")
                 .WriteClosingBracket();
 

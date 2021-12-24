@@ -29,6 +29,7 @@ namespace BlueWest.Data
         Sell
     }
 
+    [JsonExtension]
     [MapFrom(typeof(FinanceTransactionInsertDto))]
     public partial struct FinanceTransaction
     {

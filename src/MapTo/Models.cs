@@ -31,6 +31,9 @@ namespace MapTo
         string SourcePropertyName,
         string? MappedSourcePropertyTypeName,
         string? EnumerableTypeArgument,
+        ISymbol ActualSymbol,
+        INamedTypeSymbol? NamedTypeSymbol,
+        bool isEnumerable,
         bool isReadOnly)
     {
         public bool IsEnumerable => EnumerableTypeArgument is not null;
@@ -46,6 +49,7 @@ namespace MapTo
         string SourceTypeIdentifierName,
         string SourceTypeFullName,
         bool IsTypeUpdatable,
+        bool IsJsonExtension,
         ImmutableArray<MappedMember> SourceProperties,
         ImmutableArray<MappedMember> TypeProperties,
         ImmutableArray<MappedMember> SourceFields,

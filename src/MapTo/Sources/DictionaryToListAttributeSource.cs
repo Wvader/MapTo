@@ -2,12 +2,12 @@
 
 namespace MapTo.Sources
 {
-    internal static class MapPropertyAttributeSource
+    internal static class DictionaryToListAttributeSource
     {
-        internal const string AttributeName = "MapProperty";
+        internal const string AttributeName = "DictionaryToList";
         internal const string AttributeClassName = AttributeName + "Attribute";
         internal const string FullyQualifiedName = RootNamespace + "." + AttributeClassName;
-        internal const string SourcePropertyNamePropertyName = "SourcePropertyName";
+        internal const string SourceMemberNameFieldOrPropertyName = "SourcePropertyName";
 
         internal static SourceCode Generate(SourceGenerationOptions options)
         {
@@ -36,7 +36,7 @@ namespace MapTo.Sources
             }
             
             builder
-                .WriteLine("[AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter, AllowMultiple = true)]")
+                .WriteLine("[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]")
                 .WriteLine($"public sealed class {AttributeClassName} : Attribute")
                 .WriteOpeningBracket();
          
@@ -49,7 +49,7 @@ namespace MapTo.Sources
             }
 
             builder
-                .WriteLine($"public string{options.NullableReferenceSyntax} {SourcePropertyNamePropertyName} {{ get; set; }}")
+                .WriteLine($"public string{options.NullableReferenceSyntax} {SourceMemberNameFieldOrPropertyName} {{ get; set; }}")
                 .WriteClosingBracket() // class
                 .WriteClosingBracket(); // namespace
 

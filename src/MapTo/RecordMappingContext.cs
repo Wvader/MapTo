@@ -24,7 +24,7 @@ namespace MapTo
                 .OrderByDescending(s => s.Parameters.Length)
                 .First(s => s.Name == ".ctor")
                 .Parameters
-                .Where(p => !p.HasAttribute(IgnorePropertyAttributeTypeSymbol))
+                .Where(p => !p.HasAttribute(IgnoreMemberAttributeTypeSymbol))
                 .Select(property => MapProperty(sourceTypeSymbol, sourceProperties, property))
                 .Where(mappedProperty => mappedProperty is not null)
                 .ToImmutableArray()!;
@@ -43,7 +43,7 @@ namespace MapTo
                 .OrderByDescending(s => s.Parameters.Length)
                 .First(s => s.Name == ".ctor")
                 .Parameters
-                .Where(p => !p.HasAttribute(IgnorePropertyAttributeTypeSymbol))
+                .Where(p => !p.HasAttribute(IgnoreMemberAttributeTypeSymbol))
                 .Select(property => MapProperty(typeSymbol, sourceProperties, property))
                 .Where(mappedProperty => mappedProperty is not null)
                 .ToImmutableArray()!;

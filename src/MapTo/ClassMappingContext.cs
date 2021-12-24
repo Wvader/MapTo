@@ -18,7 +18,7 @@ namespace MapTo
             return typeSymbol
                 .GetAllMembers()
                 .OfType<IFieldSymbol>()
-                .Where(p => !p.HasAttribute(IgnorePropertyAttributeTypeSymbol))
+                .Where(p => !p.HasAttribute(IgnoreMemberAttributeTypeSymbol))
                 .Select(property => MapField(sourceTypeSymbol, sourceProperties, property))
                 .Where(mappedProperty => mappedProperty is not null)
                 .ToImmutableArray()!;
@@ -31,7 +31,7 @@ namespace MapTo
             return typeSymbol
                 .GetAllMembers()
                 .OfType<IPropertySymbol>()
-                .Where(p => !p.HasAttribute(IgnorePropertyAttributeTypeSymbol))
+                .Where(p => !p.HasAttribute(IgnoreMemberAttributeTypeSymbol))
                 .Select(property => MapProperty(sourceTypeSymbol, sourceProperties, property))
                 .Where(mappedProperty => mappedProperty is not null)
                 .ToImmutableArray()!;
@@ -44,7 +44,7 @@ namespace MapTo
             return sourceTypeSymbol
                 .GetAllMembers()
                 .OfType<IFieldSymbol>()
-                .Where(p => !p.HasAttribute(IgnorePropertyAttributeTypeSymbol))
+                .Where(p => !p.HasAttribute(IgnoreMemberAttributeTypeSymbol))
                 .Select(property => MapFieldSimple(typeSymbol, property))
                 .Where(mappedProperty => mappedProperty is not null)
                 .ToImmutableArray()!;
@@ -57,7 +57,7 @@ namespace MapTo
             return sourceTypeSymbol
                 .GetAllMembers()
                 .OfType<IPropertySymbol>()
-                .Where(p => !p.HasAttribute(IgnorePropertyAttributeTypeSymbol))
+                .Where(p => !p.HasAttribute(IgnoreMemberAttributeTypeSymbol))
                 .Select(property => MapPropertySimple(typeSymbol, property))
                 .Where(mappedProperty => mappedProperty is not null)
                 .ToImmutableArray()!;
